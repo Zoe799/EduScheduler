@@ -1,0 +1,1978 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="schedule-header">
+
+    <div>
+        <h1>
+            Weekly Schedule
+        </h1>
+
+        <div class="week-range">
+            {{ week_dates[0].strftime("%Y-%m-%d") }}
+            –
+            {{ week_dates[4].strftime("%Y-%m-%d") }}
+        </div>
+    </div>
+
+
+    <div class="schedule-controls">
+
+        <button type="button"
+                class="add-course-button"
+                onclick="openSchoolHoliday()">
+            Edit School Holidays
+        </button>
+
+        <button type="button" class="add-course-button" onclick="openAddCourse()">
+            + Add Course
+        </button>
+
+        <div class="date-selector">
+            <input type="date" id="date-picker" value="{{ selected_date }}">
+            <button type="button" onclick="goToDate()">Go</button>
+        </div>
+
+        <div class="week-navigation">
+            <button type="button" onclick="changeWeek(-7)">← Previous</button>
+            <button type="button" onclick="goToday()">Today</button>
+            <button type="button" onclick="changeWeek(7)">Next →</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     Add Course
+     ========================================================= -->
+
+<div
+    id="add-course-panel"
+    class="add-course-panel"
+    style="display: none;"
+>
+
+    <div class="add-course-box">
+
+        <div class="add-course-header">
+            <div>
+                <h2>Add Course</h2>
+                <p>
+                    Add a new recurring course to the schedule.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="close-course-button"
+                onclick="closeAddCourse()"
+            >
+                ×
+            </button>
+        </div>
+
+
+        <div class="add-course-field">
+            <label>School</label>
+
+            <div class="school-select-row">
+
+                <select id="add-school">
+
+                    <option value="">
+                        -- Select School --
+                    </option>
+
+                    {% for school in schools %}
+                        <option value="{{ school.id }}">
+                            {{ school.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+                <button
+                    type="button"
+                    class="add-school-button"
+                    onclick="openAddSchool()"
+                >
+                    + School
+                </button>
+
+            </div>
+        </div>
+
+
+        <div class="add-course-field">
+            <label>Course</label>
+
+            <input
+                type="text"
+                id="add-course-name"
+                placeholder="Course name"
+            >
+        </div>
+
+
+        <div class="add-course-field">
+            <label>Day</label>
+
+            <select id="add-day">
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+            </select>
+        </div>
+
+
+        <div class="add-course-time-row">
+
+            <div class="add-course-field">
+                <label>Start</label>
+
+                <input
+                    type="time"
+                    id="add-start-time"
+                >
+            </div>
+
+            <div class="add-course-field">
+                <label>End</label>
+
+                <input
+                    type="time"
+                    id="add-end-time"
+                >
+            </div>
+
+        </div>
+
+
+        <div class="add-course-field">
+            <label>Room</label>
+
+            <input
+                type="text"
+                id="add-classroom"
+                placeholder="Optional"
+            >
+        </div>
+
+
+        <div class="add-course-field">
+            <label>Group</label>
+
+            <input
+                type="text"
+                id="add-group"
+                placeholder="Optional"
+            >
+        </div>
+
+
+        <div class="add-course-field">
+            <label>Students</label>
+
+            <input
+                type="number"
+                min="0"
+                id="add-student-number"
+                placeholder="Optional"
+            >
+        </div>
+
+
+        <div class="add-course-actions">
+
+            <button
+                type="button"
+                class="add-course-save-button"
+                onclick="saveNewCourse()"
+            >
+                Add Course
+            </button>
+
+            <button
+                type="button"
+                class="add-course-cancel-button"
+                onclick="closeAddCourse()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div
+            id="add-course-message"
+            class="add-course-message"
+        ></div>
+
+    </div>
+
+</div>
+
+<!-- =====================================================
+     Edit School Holidays
+     ===================================================== -->
+
+<div
+    id="school-holiday-panel"
+    class="add-course-panel"
+    style="display: none;"
+>
+
+    <div class="add-course-box">
+
+        <div class="add-course-header">
+
+            <h2>Edit School Holidays</h2>
+
+            <button type="button"
+                    class="close-course-button"
+                    onclick="closeSchoolHoliday()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- Add Holiday -->
+
+        <form method="post"
+            action="/create-school-holiday">
+
+            <div class="add-course-field">
+
+                <label for="holiday-school">
+                    School
+                </label>
+
+                <select id="holiday-school"
+                        name="school_id"
+                        required>
+
+                    {% for school in schools %}
+
+                        <option value="{{ school.id }}">
+                            {{ school.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="holiday-date-row">
+
+                <div class="add-course-field">
+
+                    <label for="holiday-start-date">
+                        Start Date
+                    </label>
+
+                    <input type="date"
+                        id="holiday-start-date"
+                        name="start_date"
+                        value="{{ week_dates[0].isoformat() }}"
+                        required>
+
+                </div>
+
+
+                <div class="add-course-field">
+
+                    <label for="holiday-end-date">
+                        End Date
+                    </label>
+
+                    <input type="date"
+                        id="holiday-end-date"
+                        name="end_date"
+                        value="{{ week_dates[4].isoformat() }}"
+                        required>
+
+                </div>
+
+            </div>
+
+
+            <div class="add-course-field">
+
+                <label for="holiday-note">
+                    Holiday Name
+                </label>
+
+                <input type="text"
+                    id="holiday-note"
+                    name="note"
+                    placeholder="e.g. Winter Holiday">
+
+            </div>
+
+
+            <div class="add-course-actions">
+
+                <button type="submit"
+                        class="add-course-save-button">
+                    Add Holiday
+                </button>
+
+                <button type="button"
+                        class="add-course-cancel-button"
+                        onclick="closeSchoolHoliday()">
+                    Cancel
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <!-- Existing Holidays -->
+
+        <div class="school-holiday-existing">
+
+            <h3>Existing Holidays of Current Week</h3>
+
+            {% set holiday_events = calendar_events
+                | selectattr("type", "equalto", "holiday")
+                | list
+            %}
+
+            {% if holiday_events %}
+
+                {% for event in holiday_events %}
+
+                    <div class="school-holiday-item">
+
+                        <div class="school-holiday-info">
+
+                            <div class="school-holiday-name">
+                                {% if event.note %}
+                                    {{ event.note }}
+                                {% else %}
+                                    Holiday
+                                {% endif %}
+                            </div>
+
+                            <div class="school-holiday-details">
+
+                                <span>
+                                    {{ event.start_date }}
+                                    –
+                                    {{ event.end_date }}
+                                </span>
+
+                                {% for school in schools %}
+                                    {% if school.id == event.school_id %}
+                                        <span>{{ school.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+
+                        <form method="post"
+                            action="/delete-school-holiday"
+                            onsubmit="return confirm('Delete this school holiday?');">
+
+                            <input type="hidden"
+                                name="event_id"
+                                value="{{ event.id }}">
+
+                            <input type="hidden"
+                                name="week_start"
+                                value="{{ week_start }}">
+
+                            <button type="submit"
+                                    class="school-holiday-delete-button">
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="school-holiday-empty">
+                    No school holidays in this week.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+        
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     Add School
+     ========================================================= -->
+
+<div
+    id="add-school-panel"
+    class="add-course-panel"
+    style="display: none;"
+>
+
+    <div class="add-school-box">
+
+        <div class="add-course-header">
+
+            <div>
+                <h2>Add School</h2>
+
+                <p>
+                    Add a new school to EduScheduler.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="course-action-button delete-course-button"
+                onclick="closeAddSchool()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="add-course-field">
+
+            <label>School Name</label>
+
+            <input
+                type="text"
+                id="add-school-name"
+                placeholder="School name"
+            >
+
+        </div>
+
+
+        <div class="add-course-actions">
+
+            <button
+                type="button"
+                class="add-course-save-button"
+                onclick="saveNewSchool()"
+            >
+                Add School
+            </button>
+
+            <button
+                type="button"
+                class="add-course-cancel-button"
+                onclick="closeAddSchool()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div
+            id="add-school-message"
+            class="add-course-message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<form method="post" action="/save-assignments">
+
+    <input
+        type="hidden"
+        name="week_start"
+        value="{{ week_start }}"
+    >
+
+
+    <div class="weekly-columns">
+
+        {% for day in days %}
+
+            <div class="day-column">
+
+                <!-- Day header -->
+
+                <div class="day-header">
+
+                    <div class="day-name">
+                        {{ day.date.strftime("%A") }}
+                    </div>
+
+                    <div class="day-date">
+                        {{ day.date.strftime("%m/%d") }}
+                    </div>
+
+                </div>
+
+
+                <!-- Courses -->
+
+                <div class="day-courses">
+
+                    {% if day.courses %}
+
+                        {% for course in day.courses %}
+
+                            {% if not course.is_holiday %}
+
+                                <div
+                                    class="course-block"
+                                    data-course-id="{{ course.id }}"
+                                    style="
+                                        --school-background: {{ course.school_background }};
+                                        --school-border: {{ course.school_border }};
+                                    "
+                                >
+
+                                    <div class="course-card-actions">
+
+                                        <button
+                                            type="button"
+                                            class="course-action-button edit-course-button"
+                                            onclick="editCourse(this)"
+                                            title="Edit course"
+                                        >
+                                            ✎
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="course-action-button delete-course-button"
+                                            onclick="deleteCourse({{ course.id }})"
+                                            title="Delete course"
+                                        >
+                                            ×
+                                        </button>
+
+                                    </div>
+
+                                    <!-- Course display -->
+                                    <div class="course-display">
+
+                                        <!-- School -->
+
+                                        <div class="course-school">
+                                            {{ course.school_name }}
+                                        </div>
+
+
+                                        <!-- Course -->
+
+                                        <div class="course-name">
+                                            {{ course.course_name }}
+                                        </div>
+
+
+                                        <!-- Time -->
+
+                                        <div class="course-time">
+                                            {{ course.start_time_display }}
+                                            -
+                                            {{ course.end_time_display }}
+                                        </div>
+
+
+                                        <!-- Details -->
+
+                                        <div class="course-details">
+
+                                            {% if course.classroom %}
+
+                                                <span>
+                                                    📍 {{ course.classroom }}
+                                                </span>
+
+                                            {% endif %}
+
+                                            {% if course.group_name %}
+
+                                                <span>
+                                                    👥 {{ course.group_name }}
+                                                </span>
+
+                                            {% endif %}
+
+                                            {% if course.student_number %}
+
+                                                <span>
+                                                    👦 {{ course.student_number }} kids
+                                                </span>
+
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- Course edit -->
+
+                                    <div
+                                        class="course-edit"
+                                        style="display: none;"
+                                    >
+
+                                        <div class="course-edit-field">
+
+                                            <label>
+                                                Course
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                class="edit-course-name"
+                                                value="{{ course.course_name }}"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="course-edit-time-row">
+
+                                            <div class="course-edit-field">
+
+                                                <label>
+                                                    Start
+                                                </label>
+
+                                                <input
+                                                    type="time"
+                                                    class="edit-start-time"
+                                                    value="{{ course.start_time_display }}"
+                                                >
+
+                                            </div>
+
+
+                                            <div class="course-edit-field">
+
+                                                <label>
+                                                    End
+                                                </label>
+
+                                                <input
+                                                    type="time"
+                                                    class="edit-end-time"
+                                                    value="{{ course.end_time_display }}"
+                                                >
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="course-edit-field">
+
+                                            <label>
+                                                Room
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                class="edit-classroom"
+                                                value="{{ course.classroom or '' }}"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="course-edit-field">
+
+                                            <label>
+                                                Group
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                class="edit-group"
+                                                value="{{ course.group_name or '' }}"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="course-edit-field">
+
+                                            <label>
+                                                Students
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                class="edit-student-number"
+                                                value="{{ course.student_number if course.student_number is not none else '' }}"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="course-edit-actions">
+
+                                            <button
+                                                type="button"
+                                                class="course-save-button"
+                                                onclick="saveCourse(this)"
+                                            >
+                                                Save
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="course-cancel-button"
+                                                onclick="cancelCourseEdit(this)"
+                                            >
+                                                Cancel
+                                            </button>
+
+                                        </div>
+
+
+                                        <div class="course-edit-message"></div>
+
+                                    </div>
+
+                                    <!-- Inherited -->
+
+                                    {% if course.assignment_inherited %}
+
+                                        <div class="inherited-label">
+                                            ↳ Inherited
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    <!-- Teachers -->
+
+                                    <div
+                                        class="teacher-section"
+                                        data-course-id="{{ course.id }}"
+                                        data-date="{{ day.date }}"
+                                    >
+
+                                        {% for teacher_id in course.teacher_ids %}
+
+                                            {% if teacher_id is not none or loop.index <= 2 %}
+
+                                                <div class="teacher-row">
+
+                                                    <label>
+                                                        T{{ loop.index }}
+                                                    </label>
+
+                                                    <select
+                                                        name="teacher_{{ course.id }}_{{ day.date }}_{{ loop.index }}"
+                                                    >
+
+                                                        <option value="">
+                                                            -- Unassigned --
+                                                        </option>
+
+                                                        {% for teacher in teachers %}
+
+                                                            <option
+                                                                value="{{ teacher.id }}"
+                                                                {% if teacher.id == teacher_id %}
+                                                                    selected
+                                                                {% endif %}
+                                                            >
+                                                                {{ teacher.name }}
+                                                                ({{ teacher.status }})
+                                                            </option>
+
+                                                        {% endfor %}
+
+                                                    </select>
+
+                                                </div>
+
+                                            {% endif %}
+
+                                        {% endfor %}
+
+
+                                        {% if course.teacher_ids[2] is none %}
+
+                                            <button
+                                                type="button"
+                                                class="add-teacher-button"
+                                                onclick="addTeacher(this)"
+                                            >
+                                                + Add Teacher
+                                            </button>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+                                    <!-- Teacher leave -->
+
+                                    {% if course.teacher_leave_warnings %}
+
+                                        <div class="teacher-leave-warnings">
+
+                                            {% for warning in course.teacher_leave_warnings %}
+
+                                                <div class="leave-warning">
+
+                                                    ⚠ Teacher on leave
+
+                                                    <div class="leave-details">
+
+                                                        {{ warning.teacher_name }}
+
+                                                        {% if warning.note %}
+                                                            — {{ warning.note }}
+                                                        {% endif %}
+
+                                                    </div>
+
+                                                </div>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                    <!-- ================================================= -->
+                                    <!-- Teacher Working Day Warnings -->
+                                    <!-- ================================================= -->
+
+                                    {% for teacher_id in course.teacher_ids %}
+
+                                        {% if teacher_id is not none %}
+
+                                            {% for teacher in teachers %}
+
+                                                {% if teacher.id == teacher_id %}
+
+                                                    {% set working_days =
+                                                        (teacher.work_days or "").split(",")
+                                                    %}
+
+                                                    {% if day.date.isoweekday() | string not in working_days %}
+
+                                                        <div class="teacher-leave-warnings">
+
+                                                            <div class="leave-warning">
+
+                                                                ⚠ Teacher not working on this day
+
+                                                                <div class="leave-details">
+
+                                                                    {{ teacher.name }}
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    {% endif %}
+
+                                                {% endif %}
+
+                                            {% endfor %}
+
+                                        {% endif %}
+
+                                    {% endfor %}
+
+                                    <!-- Teacher conflict -->
+
+                                    {% if course.teacher_conflicts %}
+
+                                        <div class="teacher-conflicts">
+
+                                            {% for conflict in course.teacher_conflicts %}
+
+                                                <div class="conflict-warning">
+
+                                                    ⚠ Teacher conflict
+
+                                                    <div class="conflict-details">
+
+                                                        {{ conflict.teacher_name }}
+                                                        is also assigned to
+                                                        <strong>
+                                                            {{ conflict.course_name }}
+                                                        </strong>
+
+                                                        ({{ conflict.start_time }}
+                                                        -
+                                                        {{ conflict.end_time }})
+
+                                                    </div>
+
+                                                </div>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+                            
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="empty-cell">
+                            —
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+                <!-- Free teachers -->
+
+                <div class="free-teachers">
+
+                    <div class="free-teachers-title">
+                        Free today
+                        ({{ day.free_teachers | length }})
+                    </div>
+
+                    {% if day.free_teachers %}
+
+                        <div class="free-teachers-list">
+
+                            {% for teacher in day.free_teachers %}
+
+                                <span class="free-teacher-chip"
+                                      title="{{ teacher.status }}">
+                                    {{ teacher.name }}
+                                </span>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="free-teachers-empty">
+                            Everyone is busy.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="save-area">
+
+        <button
+            type="submit"
+            class="save-button"
+        >
+            Save Week
+        </button>
+
+    </div>
+
+</form>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+function goToDate() {
+
+    const datePicker =
+        document.getElementById("date-picker");
+
+    const selectedDate =
+        datePicker.value;
+
+    if (!selectedDate) {
+        return;
+    }
+
+    window.location.href =
+        "/edit?date_str=" + selectedDate;
+}
+
+
+function addTeacher(button) {
+
+    const section =
+        button.closest(".teacher-section");
+
+    const rows =
+        section.querySelectorAll(".teacher-row");
+
+    const nextSlot =
+        rows.length + 1;
+
+    if (nextSlot > 4) {
+        return;
+    }
+
+    const courseId =
+        section.dataset.courseId;
+
+    const date =
+        section.dataset.date;
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "teacher-row";
+
+    row.innerHTML = `
+
+        <label>
+            T${nextSlot}
+        </label>
+
+        <select
+            name="teacher_${courseId}_${date}_${nextSlot}"
+        >
+
+            <option value="">
+                -- Unassigned --
+            </option>
+
+            {% for teacher in teachers %}
+
+                <option value="{{ teacher.id }}">
+                    {{ teacher.name }}
+                    ({{ teacher.status }})
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    `;
+
+    section.insertBefore(
+        row,
+        button
+    );
+
+    if (nextSlot >= 4) {
+        button.remove();
+    }
+
+}
+
+async function saveCourse(button) {
+
+    const card = button.closest(".course-block");
+    const editArea = card.querySelector(".course-edit");
+
+    const courseId = card.dataset.courseId;
+
+    const courseName = card.querySelector(
+        ".edit-course-name"
+    ).value.trim();
+
+    const startTime = card.querySelector(
+        ".edit-start-time"
+    ).value;
+
+    const endTime = card.querySelector(
+        ".edit-end-time"
+    ).value;
+
+    const classroom = card.querySelector(
+        ".edit-classroom"
+    ).value.trim();
+
+    const groupName = card.querySelector(
+        ".edit-group"
+    ).value.trim();
+
+    const studentNumber = card.querySelector(
+        ".edit-student-number"
+    ).value;
+
+
+    if (!courseName) {
+        showCourseMessage(
+            card,
+            "Course name cannot be empty.",
+            true
+        );
+        return;
+    }
+
+    if (!startTime || !endTime) {
+        showCourseMessage(
+            card,
+            "Please enter both start and end time.",
+            true
+        );
+        return;
+    }
+
+    if (endTime <= startTime) {
+        showCourseMessage(
+            card,
+            "End time must be after start time.",
+            true
+        );
+        return;
+    }
+
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "course_id",
+        courseId
+    );
+
+    formData.append(
+        "course_name",
+        courseName
+    );
+
+    formData.append(
+        "start_time",
+        startTime
+    );
+
+    formData.append(
+        "end_time",
+        endTime
+    );
+
+    formData.append(
+        "classroom",
+        classroom
+    );
+
+    formData.append(
+        "group_name",
+        groupName
+    );
+
+    formData.append(
+        "student_number",
+        studentNumber
+    );
+
+
+    try {
+
+        const response = await fetch(
+            "/update-course",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result = await response.json();
+
+
+        if (!result.success) {
+
+            showCourseMessage(
+                card,
+                result.message || "Update failed.",
+                true
+            );
+
+            button.disabled = false;
+            button.textContent = "Save";
+
+            return;
+        }
+
+
+        /*
+         * 更新卡片显示内容
+         */
+
+        const nameElement = card.querySelector(
+            ".course-name"
+        );
+
+        const timeElement = card.querySelector(
+            ".course-time"
+        );
+
+        const detailsElement = card.querySelector(
+            ".course-details"
+        );
+
+
+        nameElement.textContent = courseName;
+
+
+        timeElement.textContent =
+            startTime +
+            " – " +
+            endTime;
+
+
+        let details = "";
+
+
+        if (classroom) {
+
+            details +=
+                '<span>Room ' +
+                escapeHtml(classroom) +
+                '</span>';
+
+        }
+
+
+        if (groupName) {
+
+            details +=
+                '<span>' +
+                escapeHtml(groupName) +
+                '</span>';
+
+        }
+
+
+        if (studentNumber !== "") {
+
+            details +=
+                '<span>' +
+                escapeHtml(studentNumber) +
+                ' students</span>';
+
+        }
+
+
+        detailsElement.innerHTML = details;
+
+
+        editArea.style.display = "none";
+
+        card.querySelector(
+            ".course-display"
+        ).style.display = "";
+
+
+        showCourseMessage(
+            card,
+            "Saved. This change applies to all weeks.",
+            false
+        );
+
+
+        /*
+         * 重新检查一次冲突
+         *
+         * 课程时间可能被修改，所以最安全的方式
+         * 是重新加载当前周。
+         */
+        setTimeout(function () {
+
+            window.location.reload();
+
+        }, 500);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showCourseMessage(
+            card,
+            "Unable to update course.",
+            true
+        );
+
+        button.disabled = false;
+        button.textContent = "Save";
+    }
+}
+
+
+function editCourse(button) {
+
+    const card = button.closest(
+        ".course-block"
+    );
+
+    card.querySelector(
+        ".course-display"
+    ).style.display = "none";
+
+    card.querySelector(
+        ".course-edit"
+    ).style.display = "block";
+
+    const firstInput = card.querySelector(
+        ".edit-course-name"
+    );
+
+    if (firstInput) {
+        firstInput.focus();
+    }
+}
+
+
+function cancelCourseEdit(button) {
+
+    const card = button.closest(
+        ".course-block"
+    );
+
+    card.querySelector(
+        ".course-edit"
+    ).style.display = "none";
+
+    card.querySelector(
+        ".course-display"
+    ).style.display = "";
+
+    const saveButton = card.querySelector(
+        ".course-save-button"
+    );
+
+    saveButton.disabled = false;
+    saveButton.textContent = "Save";
+
+    clearCourseMessage(card);
+}
+
+
+function showCourseMessage(
+    card,
+    message,
+    isError
+) {
+
+    const element = card.querySelector(
+        ".course-edit-message"
+    );
+
+    element.textContent = message;
+
+    if (isError) {
+
+        element.classList.add(
+            "course-edit-error"
+        );
+
+        element.classList.remove(
+            "course-edit-success"
+        );
+
+    } else {
+
+        element.classList.add(
+            "course-edit-success"
+        );
+
+        element.classList.remove(
+            "course-edit-error"
+        );
+
+    }
+}
+
+
+function clearCourseMessage(card) {
+
+    const element = card.querySelector(
+        ".course-edit-message"
+    );
+
+    element.textContent = "";
+
+    element.classList.remove(
+        "course-edit-error",
+        "course-edit-success"
+    );
+}
+
+
+function escapeHtml(value) {
+
+    const div = document.createElement(
+        "div"
+    );
+
+    div.textContent = value;
+
+    return div.innerHTML;
+}
+
+function openAddCourse() {
+
+    const panel =
+        document.getElementById(
+            "add-course-panel"
+        );
+
+    panel.style.display = "flex";
+
+    document.getElementById(
+        "add-course-name"
+    ).focus();
+}
+
+
+function closeAddCourse() {
+
+    const panel =
+        document.getElementById(
+            "add-course-panel"
+        );
+
+    panel.style.display = "none";
+
+    clearAddCourseForm();
+}
+
+
+function clearAddCourseForm() {
+
+    document.getElementById(
+        "add-school"
+    ).value = "";
+
+    document.getElementById(
+        "add-course-name"
+    ).value = "";
+
+    document.getElementById(
+        "add-day"
+    ).value = "1";
+
+    document.getElementById(
+        "add-start-time"
+    ).value = "";
+
+    document.getElementById(
+        "add-end-time"
+    ).value = "";
+
+    document.getElementById(
+        "add-classroom"
+    ).value = "";
+
+    document.getElementById(
+        "add-group"
+    ).value = "";
+
+    document.getElementById(
+        "add-student-number"
+    ).value = "";
+
+    document.getElementById(
+        "add-course-message"
+    ).textContent = "";
+}
+
+
+async function saveNewCourse() {
+
+    const schoolId =
+        document.getElementById(
+            "add-school"
+        ).value;
+
+    const courseName =
+        document.getElementById(
+            "add-course-name"
+        ).value.trim();
+
+    const dayOfWeek =
+        document.getElementById(
+            "add-day"
+        ).value;
+
+    const startTime =
+        document.getElementById(
+            "add-start-time"
+        ).value;
+
+    const endTime =
+        document.getElementById(
+            "add-end-time"
+        ).value;
+
+    const classroom =
+        document.getElementById(
+            "add-classroom"
+        ).value.trim();
+
+    const groupName =
+        document.getElementById(
+            "add-group"
+        ).value.trim();
+
+    const studentNumber =
+        document.getElementById(
+            "add-student-number"
+        ).value;
+
+    const message =
+        document.getElementById(
+            "add-course-message"
+        );
+
+    const button =
+        document.querySelector(
+            ".add-course-save-button"
+        );
+
+
+    if (!schoolId) {
+
+        message.textContent =
+            "Please select a school.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        return;
+    }
+
+
+    if (!courseName) {
+
+        message.textContent =
+            "Course name cannot be empty.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        return;
+    }
+
+
+    if (!startTime || !endTime) {
+
+        message.textContent =
+            "Please enter both start and end time.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        return;
+    }
+
+
+    if (endTime <= startTime) {
+
+        message.textContent =
+            "End time must be after start time.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        return;
+    }
+
+
+    button.disabled = true;
+    button.textContent = "Adding...";
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "school_id",
+        schoolId
+    );
+
+    formData.append(
+        "course_name",
+        courseName
+    );
+
+    formData.append(
+        "day_of_week",
+        dayOfWeek
+    );
+
+    formData.append(
+        "start_time",
+        startTime
+    );
+
+    formData.append(
+        "end_time",
+        endTime
+    );
+
+    formData.append(
+        "classroom",
+        classroom
+    );
+
+    formData.append(
+        "group_name",
+        groupName
+    );
+
+    formData.append(
+        "student_number",
+        studentNumber
+    );
+
+
+    try {
+
+        const response = await fetch(
+            "/create-course",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result =
+            await response.json();
+
+
+        if (!result.success) {
+
+            message.textContent =
+                result.message ||
+                "Unable to create course.";
+
+            message.className =
+                "add-course-message add-course-error";
+
+            button.disabled = false;
+            button.textContent = "Add Course";
+
+            return;
+        }
+
+
+        message.textContent =
+            "Course added successfully.";
+
+        message.className =
+            "add-course-message add-course-success";
+
+
+        setTimeout(function () {
+
+            window.location.reload();
+
+        }, 500);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Unable to create course.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        button.disabled = false;
+        button.textContent = "Add Course";
+    }
+}
+
+function openAddSchool() {
+
+    document.getElementById(
+        "add-school-panel"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "add-school-name"
+    ).focus();
+}
+
+
+function closeAddSchool() {
+
+    document.getElementById(
+        "add-school-panel"
+    ).style.display = "none";
+
+    document.getElementById(
+        "add-school-name"
+    ).value = "";
+
+    document.getElementById(
+        "add-school-message"
+    ).textContent = "";
+}
+
+
+async function saveNewSchool() {
+
+    const input =
+        document.getElementById(
+            "add-school-name"
+        );
+
+    const message =
+        document.getElementById(
+            "add-school-message"
+        );
+
+    const button =
+        document.querySelector(
+            "#add-school-panel .add-course-save-button"
+        );
+
+    const schoolName =
+        input.value.trim();
+
+    if (!schoolName) {
+
+        message.textContent =
+            "School name cannot be empty.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Adding...";
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "school_name",
+        schoolName
+    );
+
+
+    try {
+
+        const response = await fetch(
+            "/create-school",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result =
+            await response.json();
+
+
+        if (!result.success) {
+
+            message.textContent =
+                result.message ||
+                "Unable to add school.";
+
+            message.className =
+                "add-course-message add-course-error";
+
+            button.disabled = false;
+            button.textContent = "Add School";
+
+            return;
+        }
+
+
+        message.textContent =
+            "School added successfully.";
+
+        message.className =
+            "add-course-message add-course-success";
+
+
+        setTimeout(function () {
+
+            closeAddSchool();
+
+            /*
+             * Reload the page so the new school
+             * appears in the School dropdown.
+             */
+
+            window.location.reload();
+
+        }, 400);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Unable to add school.";
+
+        message.className =
+            "add-course-message add-course-error";
+
+        button.disabled = false;
+        button.textContent = "Add School";
+    }
+}
+
+async function deleteCourse(courseId, courseName) {
+    const confirmed = confirm(
+        "Delete this course?\n\n" +
+        courseName +
+        "\n\n" +
+        "This will permanently delete the recurring course " +
+        "and its teacher assignments."
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("course_id", courseId);
+
+    try {
+        const response = await fetch(
+            "/delete-course",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result = await response.json();
+
+        if (!result.success) {
+            alert(
+                result.message ||
+                "Unable to delete course."
+            );
+
+            return;
+        }
+
+        // Reload the current week
+        window.location.reload();
+
+    } catch (error) {
+        console.error(error);
+
+        alert(
+            "Unable to delete course."
+        );
+    }
+}
+
+function changeWeek(days) {
+
+    const current =
+        new Date("{{ selected_date }}T12:00:00");
+
+    current.setDate(
+        current.getDate() + days
+    );
+
+    const year =
+        current.getFullYear();
+
+    const month =
+        String(
+            current.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            current.getDate()
+        ).padStart(2, "0");
+
+    const dateString =
+        year + "-" +
+        month + "-" +
+        day;
+
+    window.location.href =
+        "/edit?date_str=" +
+        dateString;
+}
+
+
+function goToday() {
+
+    const today =
+        new Date();
+
+    const year =
+        today.getFullYear();
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+    const dateString =
+        year + "-" +
+        month + "-" +
+        day;
+
+    window.location.href =
+        "/edit?date_str=" +
+        dateString;
+}
+
+function openSchoolHoliday() {
+    document.getElementById("school-holiday-panel").style.display = "flex";
+}
+
+
+function closeSchoolHoliday() {
+    document.getElementById("school-holiday-panel").style.display = "none";
+}
+
+</script>
+
+{% endblock %}

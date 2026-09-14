@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course Admin</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+
+        tr:hover {
+            background: #f8f8f8;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Course Management</h1>
+
+<table>
+
+    <thead>
+        <tr>
+            <th>School</th>
+            <th>Course</th>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Classroom</th>
+            <th>Group</th>
+            <th>Students</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for course in courses %}
+
+        <tr>
+            <td>{{ course.school }}</td>
+
+            <td>{{ course.course_name }}</td>
+
+            <td>
+                {% if course.day_of_week == 1 %}
+                    Monday
+                {% elif course.day_of_week == 2 %}
+                    Tuesday
+                {% elif course.day_of_week == 3 %}
+                    Wednesday
+                {% elif course.day_of_week == 4 %}
+                    Thursday
+                {% elif course.day_of_week == 5 %}
+                    Friday
+                {% endif %}
+            </td>
+
+            <td>{{ course.start_time }}</td>
+            <td>{{ course.end_time }}</td>
+
+            <td>{{ course.classroom }}</td>
+            <td>{{ course.group_name }}</td>
+            <td>{{ course.student_number }}</td>
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="teacher-schedule-header">
+
+        <div>
+            <a
+                href="/"
+                class="back-to-schedule"
+            >
+                ← Back to Schedule
+            </a>
+
+            <h1>
+                {{ teacher.name }}'s Schedule
+            </h1>
+
+            <div class="week-range">
+                {{ week_start.strftime("%B %d, %Y") }}
+                -
+                {{ week_end.strftime("%B %d, %Y") }}
+            </div>
+
+        </div>
+
+
+        <div class="teacher-controls">
+
+            <select
+                id="teacher-selector"
+                onchange="changeTeacher()"
+            >
+
+                {% for item in teachers %}
+
+                    <option
+                        value="{{ item.id }}"
+                        {% if item.id == teacher_id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ item.name }} ({{ item.status }})
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <div class="week-navigation">
+
+                <button
+                    type="button"
+                    onclick="changeWeek(-7)"
+                >
+                    ← Previous
+                </button>
+
+                <button
+                    type="button"
+                    onclick="goToToday()"
+                >
+                    Today
+                </button>
+
+                <button
+                    type="button"
+                    onclick="changeWeek(7)"
+                >
+                    Next →
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="weekly-columns">
+
+        {% for day in days %}
+
+            <div class="day-column">
+
+                <div class="day-header">
+
+                    <div class="day-name">
+                        {{ day.date.strftime("%A") }}
+                    </div>
+
+                    <div class="day-date">
+                        {{ day.date.strftime("%m/%d") }}
+                    </div>
+
+                </div>
+
+
+                <div class="day-courses">
+
+                    {% if day.courses %}
+
+                        {% for course in day.courses %}
+
+                            <div
+                                class="course-block"
+                                style="
+                                    --school-background:
+                                        {{ course.school_background }};
+                                    --school-border:
+                                        {{ course.school_border }};
+                                "
+                            >
+
+                                <div class="course-school">
+                                    {{ course.school_name }}
+                                </div>
+
+
+                                <div class="course-name">
+                                    {{ course.course_name }}
+                                </div>
+
+
+                                <div class="course-time">
+                                    {{ course.start_time_display }}
+                                    -
+                                    {{ course.end_time_display }}
+                                </div>
+
+
+                                <div class="course-details">
+
+                                    {% if course.classroom %}
+
+                                        <span>
+                                            📍 {{ course.classroom }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    {% if course.group_name %}
+
+                                        <span>
+                                            👥 {{ course.group_name }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    {% if course.student_number %}
+
+                                        <span>
+                                            👦
+                                            {{ course.student_number }}
+                                            kids
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                {% if course.assignment_source == "inherited" %}
+
+                                    <div class="teacher-schedule-inherited">
+                                        Inherited from previous schedule
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="teacher-empty-day">
+                            No classes
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+<script>
+
+function changeTeacher() {
+
+    const selector =
+        document.getElementById("teacher-selector");
+
+    const teacherId =
+        selector.value;
+
+    const date =
+        "{{ selected_date.isoformat() }}";
+
+    window.location.href =
+        "/teacher/"
+        + teacherId
+        + "?date_str="
+        + date;
+}
+
+
+function changeWeek(days) {
+
+    const currentDate =
+        new Date("{{ selected_date.isoformat() }}T12:00:00");
+
+    currentDate.setDate(
+        currentDate.getDate() + days
+    );
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        String(
+            currentDate.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            currentDate.getDate()
+        ).padStart(2, "0");
+
+    const newDate =
+        year + "-"
+        + month + "-"
+        + day;
+
+    window.location.href =
+        "/teacher/{{ teacher_id }}"
+        + "?date_str="
+        + newDate;
+}
+
+
+function goToToday() {
+
+    const today =
+        new Date();
+
+    const year =
+        today.getFullYear();
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+    const todayString =
+        year + "-"
+        + month + "-"
+        + day;
+
+    window.location.href =
+        "/teacher/{{ teacher_id }}"
+        + "?date_str="
+        + todayString;
+}
+
+</script>
+
+{% endblock %}

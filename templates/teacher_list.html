@@ -1,0 +1,758 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <!-- ===================================================== -->
+    <!-- Header -->
+    <!-- ===================================================== -->
+
+    <div class="teacher-list-header">
+
+        <div>
+            <h1>Teacher Schedule</h1>
+            <p>Select a teacher to view their weekly schedule.</p>
+        </div>
+
+        <div class="teacher-list-header-actions">
+
+            <button
+                type="button"
+                class="add-course-button"
+                onclick="openAddTeacher()"
+            >
+                + Add Teacher
+            </button>
+
+            <button
+                type="button"
+                class="add-course-button edit-teachers-button"
+                onclick="toggleTeacherEditMode()"
+            >
+                Edit Teachers
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- Teacher Cards -->
+    <!-- ===================================================== -->
+
+    <div class="teacher-list">
+
+        {% for teacher in teachers %}
+
+            <div
+                class="teacher-card"
+                data-teacher-id="{{ teacher.id }}"
+            >
+
+                <!-- Teacher information -->
+                <a
+                    href="/teacher/{{ teacher.id }}"
+                    class="teacher-card-link"
+                >
+
+                    <div class="teacher-card-name">
+                        {{ teacher.name }}
+                    </div>
+
+                    {% if teacher.status %}
+                        <div class="teacher-card-status">
+                            {{ teacher.status }}
+                        </div>
+                    {% endif %}
+
+                </a>
+
+
+                <!-- Edit / Delete buttons -->
+                <div class="teacher-card-actions">
+
+                    <button
+                        type="button"
+                        class="teacher-action-button edit-teacher-button"
+                        onclick="editTeacher({{ teacher.id }})"
+                        title="Edit teacher"
+                    >
+                        ✎
+                    </button>
+
+                    <button
+                        type="button"
+                        class="teacher-action-button delete-teacher-button"
+                        onclick="deleteTeacher(
+                            {{ teacher.id }},
+                            '{{ teacher.name | e }}'
+                        )"
+                        title="Delete teacher"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-cell">
+                No teachers found.
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- Teacher Edit / Leave Panels -->
+    <!-- ===================================================== -->
+
+    {% for teacher in teachers %}
+
+        <div
+            id="teacher-leave-panel-{{ teacher.id }}"
+            class="add-course-panel teacher-leave-panel"
+            style="display:none;"
+        >
+            <div class="teacher-leave-box">
+                <div class="panel-title">
+                    Edit Teacher: {{ teacher.name }}
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- Working Days -->
+                <!-- ================================================= -->
+
+                <div class="teacher-workdays-section">
+
+                    <div class="teacher-section-title">
+                        Working Days
+                    </div>
+
+                    <div class="teacher-workdays">
+
+                        {% for day_num, day_name in [
+                            (1, "Mon"),
+                            (2, "Tue"),
+                            (3, "Wed"),
+                            (4, "Thu"),
+                            (5, "Fri")
+                        ] %}
+
+                            <label class="workday-checkbox">
+
+                                <input
+                                    type="checkbox"
+                                    class="teacher-workday"
+                                    value="{{ day_num }}"
+                                    {% if day_num|string in teacher.work_days.split(',') %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>{{ day_name }}</span>
+
+                            </label>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="add-course-save"
+                        onclick="saveTeacherWorkDays({{ teacher.id }})"
+                    >
+                        Save Working Days
+                    </button>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- Teacher Leave -->
+                <!-- ================================================= -->
+
+                <div class="teacher-leave-section">
+
+                    <div class="teacher-section-title">
+                        Teacher Leave
+                    </div>
+
+
+                    <!-- Existing leave records -->
+
+                    {% if leave_map.get(teacher.id) %}
+
+                        <div class="teacher-leave-list">
+
+                            {% for leave in leave_map.get(teacher.id, []) %}
+
+                                <div class="teacher-leave-item">
+
+                                    <div class="teacher-leave-info">
+
+                                        <div>
+                                            {{ leave.start_date }}
+                                            →
+                                            {{ leave.end_date }}
+                                        </div>
+
+                                        {% if leave.note %}
+                                            <div class="teacher-leave-note">
+                                                {{ leave.note }}
+                                            </div>
+                                        {% endif %}
+
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="teacher-action-button delete-teacher-button"
+                                        onclick="deleteTeacherLeave({{ leave.id }})"
+                                        title="Delete leave"
+                                    >
+                                        ×
+                                    </button>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="empty-cell">
+                            No leave records.
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- Add leave -->
+
+                    <div class="teacher-leave-form">
+
+                        <div class="form-row">
+
+                            <div class="form-group">
+
+                                <label>
+                                    Start Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="leave-start-{{ teacher.id }}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    End Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="leave-end-{{ teacher.id }}"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Note
+                            </label>
+
+                            <input
+                                type="text"
+                                id="leave-note-{{ teacher.id }}"
+                                placeholder="Optional"
+                            >
+
+                        </div>
+
+
+                        <div class="panel-actions">
+
+                            <button
+                                type="button"
+                                class="add-course-save"
+                                onclick="saveTeacherLeave({{ teacher.id }})"
+                            >
+                                Add Leave
+                            </button>
+
+                            <button
+                                type="button"
+                                class="add-course-cancel"
+                                onclick="closeTeacherLeave({{ teacher.id }})"
+                            >
+                                Close
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- Add Teacher Panel -->
+<!-- ========================================================= -->
+
+<div
+    id="add-teacher-panel"
+    class="add-course-panel"
+    style="display: none;"
+>
+    <div class="add-teacher-box">
+
+        <div class="panel-title">
+            Add Teacher
+        </div>
+
+        <div class="form-group">
+            <label>
+                Name
+            </label>
+            <input
+                type="text"
+                id="new-teacher-name"
+                placeholder="Teacher name"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>
+                Status
+            </label>
+            <input
+                type="text"
+                id="new-teacher-status"
+                placeholder="Optional"
+            >
+        </div>
+
+        <div class="panel-actions">
+            <button
+                type="button"
+                class="add-course-save"
+                onclick="saveNewTeacher()"
+            >
+                Save
+            </button>
+
+            <button
+                type="button"
+                class="add-course-cancel"
+                onclick="closeAddTeacher()"
+            >
+                Cancel
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- JavaScript -->
+<!-- ========================================================= -->
+
+<script>
+
+
+/* ========================================================= */
+/* Add Teacher */
+/* ========================================================= */
+
+function openAddTeacher() {
+
+    const panel = document.getElementById("add-teacher-panel");
+
+    if (!panel) return;
+
+    panel.style.display = "flex";
+
+}
+
+
+function closeAddTeacher() {
+
+    const panel = document.getElementById("add-teacher-panel");
+
+    if (!panel) return;
+
+    panel.style.display = "none";
+
+}
+
+
+/* ========================================================= */
+/* Edit Teachers Mode */
+/* ========================================================= */
+
+function toggleTeacherEditMode() {
+
+    const isEditing =
+        document.body.classList.toggle("teacher-edit-mode");
+
+    const button =
+        document.querySelector(".edit-teachers-button");
+
+    if (!button) return;
+
+    button.textContent =
+        isEditing
+            ? "Done"
+            : "Edit Teachers";
+
+}
+
+
+/* ========================================================= */
+/* Teacher Edit Panel */
+/* ========================================================= */
+
+function editTeacher(teacherId) {
+
+    const panel = document.getElementById(
+        "teacher-leave-panel-" + teacherId
+    );
+
+    if (!panel) return;
+
+    panel.style.display = "flex";
+
+}
+
+
+/* ========================================================= */
+/* Close Teacher Edit Panel */
+/* ========================================================= */
+
+function closeTeacherLeave(teacherId) {
+
+    const panel = document.getElementById(
+        "teacher-leave-panel-" + teacherId
+    );
+
+    if (!panel) return;
+
+    panel.style.display = "none";
+
+}
+
+
+/* ========================================================= */
+/* Save New Teacher */
+/* ========================================================= */
+
+async function saveNewTeacher() {
+
+    const name =
+        document.getElementById("new-teacher-name").value.trim();
+
+    const status =
+        document.getElementById("new-teacher-status").value.trim();
+
+    if (!name) {
+
+        alert("Please enter a teacher name.");
+
+        return;
+    }
+
+
+    const formData = new FormData();
+
+    formData.append("teacher_name", name);
+    formData.append("status", status);
+
+
+    const response = await fetch(
+        "/create-teacher",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+
+    if (!response.ok) {
+
+        alert("Failed to create teacher.");
+
+        return;
+    }
+
+
+    const result = await response.json();
+
+
+    if (!result.success) {
+
+        alert(result.message);
+
+        return;
+    }
+
+
+    location.reload();
+}
+
+/* ========================================================= */
+/* Delete Teacher */
+/* ========================================================= */
+
+async function deleteTeacher(teacherId, teacherName) {
+
+    if (
+        !confirm(
+            `Are you sure you want to delete ${teacherName}?`
+        )
+    ) {
+        return;
+    }
+
+
+    const formData = new FormData();
+
+    formData.append("teacher_id", teacherId);
+
+
+    const response = await fetch(
+        "/delete-teacher",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+
+    if (!response.ok) {
+
+        alert("Failed to delete teacher.");
+
+        return;
+    }
+
+
+    location.reload();
+
+}
+
+
+/* ========================================================= */
+/* Save Teacher Working Days */
+/* ========================================================= */
+
+async function saveTeacherWorkDays(teacherId) {
+
+    const panel = document.getElementById(
+        "teacher-leave-panel-" + teacherId
+    );
+
+    if (!panel) return;
+
+
+    const checkboxes =
+        panel.querySelectorAll(
+            ".teacher-workday:checked"
+        );
+
+
+    const workDays =
+        Array.from(checkboxes)
+            .map(cb => cb.value)
+            .join(",");
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "teacher_id",
+        teacherId
+    );
+
+    formData.append(
+        "work_days",
+        workDays
+    );
+
+
+    const response = await fetch(
+        "/update-teacher-workdays",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+
+    if (!response.ok) {
+
+        alert("Failed to save working days.");
+
+        return;
+    }
+
+
+    location.reload();
+
+}
+
+
+/* ========================================================= */
+/* Save Teacher Leave */
+/* ========================================================= */
+
+async function saveTeacherLeave(teacherId) {
+
+    const startDate =
+        document.getElementById(
+            "leave-start-" + teacherId
+        ).value;
+
+    const endDate =
+        document.getElementById(
+            "leave-end-" + teacherId
+        ).value;
+
+    const note =
+        document.getElementById(
+            "leave-note-" + teacherId
+        ).value.trim();
+
+
+    if (!startDate || !endDate) {
+
+        alert("Please select start and end dates.");
+
+        return;
+    }
+
+
+    if (startDate > endDate) {
+
+        alert("End date must be after start date.");
+
+        return;
+    }
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "teacher_id",
+        teacherId
+    );
+
+    formData.append(
+        "start_date",
+        startDate
+    );
+
+    formData.append(
+        "end_date",
+        endDate
+    );
+
+    formData.append(
+        "note",
+        note
+    );
+
+
+    const response = await fetch(
+        "/create-teacher-leave",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+
+    if (!response.ok) {
+
+        alert("Failed to save teacher leave.");
+
+        return;
+    }
+
+
+    location.reload();
+
+}
+
+
+/* ========================================================= */
+/* Delete Teacher Leave */
+/* ========================================================= */
+
+async function deleteTeacherLeave(leaveId) {
+
+    if (
+        !confirm(
+            "Are you sure you want to delete this leave record?"
+        )
+    ) {
+        return;
+    }
+
+
+    const formData = new FormData();
+
+    formData.append(
+        "leave_id",
+        leaveId
+    );
+
+
+    const response = await fetch(
+        "/delete-teacher-leave",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+
+    if (!response.ok) {
+
+        alert("Failed to delete leave.");
+
+        return;
+    }
+
+
+    location.reload();
+
+}
+
+</script>
+
+{% endblock %}
