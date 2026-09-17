@@ -9,11 +9,11 @@
 
 ## 💡 Why EduScheduler?
 
-### 为什么自己开发，而不是使用现有排课系统？
+### 为什么不是使用现有排课系统？
 
 **中文**
 
-EduScheduler 并不是为了重新实现一个通用的排课软件，而是为了适应一个比较特殊的实际工作场景。
+EduScheduler 是为了适应一个比较特殊的实际工作场景。
 
 我们的课程安排涉及 **多个学校、多个校区，以及一批需要在不同学校之间流动的教师**。
 
@@ -37,11 +37,7 @@ EduScheduler 并不是为了重新实现一个通用的排课软件，而是为�
 
 实际的排课工作仍然需要由工作人员根据课程地点、移动时间和具体情况进行判断。
 
-因此，EduScheduler 的设计理念是：
-
-> **发现问题，而不是替人做决定。**
-
-系统会对教师时间冲突和请假等情况提供 **warnings**，而不是强制阻止排课。
+因此，系统会对教师时间冲突和请假等情况提供 **warnings**，而不是强制阻止排课。
 
 此外，我们的课程安排还存在一些通用排课软件不一定能够很好适应的需求：
 
@@ -60,7 +56,7 @@ EduScheduler 因此被设计成一个面向实际工作流程的 **multi-school 
 
 **English**
 
-EduScheduler was not created to reinvent a generic scheduling application. It was built to fit a specific real-world workflow.
+EduScheduler was built to fit a specific real-world workflow.
 
 Our teaching schedule involves **multiple schools, multiple locations, and a shared pool of teachers who move between schools**.
 
