@@ -1,13 +1,19 @@
 from datetime import date, timedelta
 from typing import Optional
 import os
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
+from utils.time import format_time
+from utils.school_colors import SCHOOL_COLOR_PALETTE
+
 import mysql.connector
+
+load_dotenv()
 
 
 app = FastAPI()
@@ -27,113 +33,8 @@ DAY_NAMES = {
     3: "Wednesday",
     4: "Thursday",
     5: "Friday",
+    6: "Saturday"
 }
-
-SCHOOL_COLORS = {
-    "ISB": {
-        "background": "#EAF2FF",
-        "border": "#5B8DEF",
-    },
-
-    "WAB": {
-        "background": "#EAF7EE",
-        "border": "#55A96B",
-    },
-
-    "BSB Sanlitun": {
-        "background": "#FFF2E5",
-        "border": "#E58A3A",
-    },
-
-    "LFIP": {
-        "background": "#F3ECFF",
-        "border": "#9566D8",
-    },
-
-    "Dulwich": {
-        "background": "#E8F7F7",
-        "border": "#3FA6A6",
-    },
-
-    "Harrow": {
-        "background": "#FFF0F2",
-        "border": "#D96B7B",
-    },
-
-    "Daystar SLT": {
-        "background": "#FFF8DF",
-        "border": "#D4A72C",
-    },
-
-    "DSP": {
-        "background": "#EEF0FF",
-        "border": "#6978D8",
-    },
-
-    "THIS": {
-        "background": "#F1F1F1",
-        "border": "#777777",
-    },
-
-    # 下面是预留颜色
-    "MSB": {
-        "background": "#EAF5FF",
-        "border": "#4C9BCF",
-    },
-
-    "NAS": {
-        "background": "#FDEDF7",
-        "border": "#C85A9B",
-    },
-
-    "BSB Shunyi": {
-        "background": "#EEF8E8",
-        "border": "#76A84F",
-    },
-
-    "Daystar BG": {
-        "background": "#FFF0E8",
-        "border": "#D8784D",
-    },
-}
-
-SCHOOL_COLOR_PALETTE = [
-    {"background": "#EAF2FF", "border": "#5B8DEF"},
-    {"background": "#EAF7EE", "border": "#55A96B"},
-    {"background": "#FFF2E5", "border": "#E58A3A"},
-    {"background": "#F3ECFF", "border": "#9566D8"},
-    {"background": "#E8F7F7", "border": "#3FA6A6"},
-    {"background": "#FFF0F2", "border": "#D96B7B"},
-    {"background": "#FFF8DF", "border": "#D4A72C"},
-    {"background": "#EEF0FF", "border": "#6978D8"},
-    {"background": "#F1F1F1", "border": "#777777"},
-    {"background": "#EAF5FF", "border": "#4C9BCF"},
-    {"background": "#FDEDF7", "border": "#C85A9B"},
-    {"background": "#EEF8E8", "border": "#76A84F"},
-    {"background": "#FFF0E8", "border": "#D8784D"},
-
-    # New colors
-    {"background": "#EAF8F5", "border": "#48A999"},
-    {"background": "#FFF4E8", "border": "#D98A45"},
-    {"background": "#F0EAFF", "border": "#8667C8"},
-    {"background": "#EAF0F8", "border": "#607FA8"},
-    {"background": "#F9EAF0", "border": "#B85C7A"},
-    {"background": "#EDF7E9", "border": "#6C9E50"},
-    {"background": "#FFF9E8", "border": "#C9A43A"},
-]
-
-def get_school_color(
-    school_name,
-    school_id
-):
-    if school_name in SCHOOL_COLORS:
-        return SCHOOL_COLORS[school_name]
-
-    index = (
-        int(school_id) - 1
-    ) % len(SCHOOL_COLOR_PALETTE)
-
-    return SCHOOL_COLOR_PALETTE[index]
 
 # =========================================================
 # Database
@@ -144,7 +45,7 @@ def get_db():
         host=os.getenv("DB_HOST","localhost"),
         user=os.getenv("DB_USER","root"),
         password=os.getenv("DB_PASSWORD", ""),
-        database=("DB_PASSWORD", "course_scheduler")
+        database="course_scheduler"
     )
 
 @app.get("/")
@@ -176,7 +77,7 @@ async def schedule(
 
     week_dates = [
         week_start + timedelta(days=i)
-        for i in range(5)
+        for i in range(6)
     ]
 
 
@@ -213,10 +114,14 @@ async def schedule(
             c.id,
             c.school_id,
             s.name AS school_name,
+            s.background_color,
+            s.border_color,
             c.course_name,
             c.day_of_week,
             c.start_time,
             c.end_time,
+            c.start_date,
+            c.end_date,
             c.classroom,
             c.group_name,
             c.student_number
@@ -478,13 +383,13 @@ async def schedule(
     for course in courses:
 
         # MySQL TIME comes back as timedelta
-        course["start_time_display"] = str(
+        course["start_time_display"] = format_time(
             course["start_time"]
-        )[:5]
+        )
 
-        course["end_time_display"] = str(
+        course["end_time_display"] = format_time(
             course["end_time"]
-        )[:5]
+        )
 
 
     # --------------------------------------------------
@@ -516,6 +421,21 @@ async def schedule(
             ):
                 continue
 
+            # ------------------------------------------
+            # Course date range
+            # ------------------------------------------
+
+            if (
+                course["start_date"] is not None
+                and current_date < course["start_date"]
+            ):
+                continue
+
+            if (
+                course["end_date"] is not None
+                and current_date > course["end_date"]
+            ):
+                continue
             # ------------------------------------------
             # Determine teachers
             # ------------------------------------------
@@ -571,17 +491,12 @@ async def schedule(
 
             course_data = course.copy()
 
-            school_color = get_school_color(
-                course["school_name"],
-                course["school_id"]
-            )
-
             course_data["school_background"] = (
-                school_color["background"]
+                course["background_color"]
             )
 
             course_data["school_border"] = (
-                school_color["border"]
+                course["border_color"]
             )
 
             course_data["teacher_ids"] = teacher_ids
@@ -692,7 +607,7 @@ async def schedule(
     teacher_by_id = {t["id"]: t for t in teachers}
 
     # 每个 weekday（1-5）-> set(teacher_id)
-    busy_by_weekday = {1: set(), 2: set(), 3: set(), 4: set(), 5: set()}
+    busy_by_weekday = {1: set(), 2: set(), 3: set(), 4: set(), 5: set(), 6: set()}
 
     for day in days:
         weekday = day["date"].isoweekday()   # 1=Monday ... 5=Friday
@@ -1237,11 +1152,11 @@ async def teacher_schedule(
         - timedelta(days=selected_date.weekday())
     )
 
-    week_end = week_start + timedelta(days=4)
+    week_end = week_start + timedelta(days=5)
 
     week_dates = [
         week_start + timedelta(days=i)
-        for i in range(5)
+        for i in range(6)
     ]
 
 
@@ -1311,7 +1226,7 @@ async def teacher_schedule(
             c.classroom,
             c.group_name,
             c.student_number,
-            s.name AS school_name
+            s.name AS school_name,
         FROM courses c
         JOIN schools s
             ON c.school_id = s.id
@@ -1613,13 +1528,13 @@ async def teacher_schedule(
             # Format time
             # -------------------------------------------------
 
-            start_time_display = str(
+            start_time_display = format_time(
                 course["start_time"]
-            )[:5]
+            )
 
-            end_time_display = str(
+            end_time_display = format_time(
                 course["end_time"]
-            )[:5]
+            )
 
 
             # -------------------------------------------------
@@ -1730,11 +1645,11 @@ async def view_schedule(
         - timedelta(days=selected_date.weekday())
     )
 
-    week_end = week_start + timedelta(days=4)
+    week_end = week_start + timedelta(days=5)
 
     week_dates = [
         week_start + timedelta(days=i)
-        for i in range(5)
+        for i in range(6)
     ]
 
 
@@ -1775,9 +1690,13 @@ async def view_schedule(
             c.day_of_week,
             c.start_time,
             c.end_time,
+            c.start_date,
+            c.end_date,
             c.classroom,
             c.group_name,
-            c.student_number
+            c.student_number,
+            s.background_color,
+            s.border_color
         FROM courses c
         JOIN schools s
             ON c.school_id = s.id
@@ -2008,6 +1927,21 @@ async def view_schedule(
             if course["day_of_week"] != weekday + 1:
                 continue
 
+            # -------------------------------------------------
+            # Course date range
+            # -------------------------------------------------
+
+            if (
+                course["start_date"] is not None
+                and current_date < course["start_date"]
+            ):
+                continue
+
+            if (
+                course["end_date"] is not None
+                and current_date > course["end_date"]
+            ):
+                continue
 
             # -------------------------------------------------
             # Determine effective teachers
@@ -2067,31 +2001,17 @@ async def view_schedule(
             if is_holiday:
                 continue
 
-
-            # -------------------------------------------------
-            # School color
-            # -------------------------------------------------
-
-            school_color = SCHOOL_COLORS.get(
-                course["school_name"],
-                {
-                    "background": "#F8FAFC",
-                    "border": "#9AA4B2",
-                }
-            )
-
-
             # -------------------------------------------------
             # Format time
             # -------------------------------------------------
 
-            start_time_display = str(
+            start_time_display = format_time(
                 course["start_time"]
-            )[:5]
+            )
 
-            end_time_display = str(
+            end_time_display = format_time(
                 course["end_time"]
-            )[:5]
+            )
 
 
             # -------------------------------------------------
@@ -2129,6 +2049,8 @@ async def view_schedule(
                     start_time_display,
                 "end_time_display":
                     end_time_display,
+                "start_date": course["start_date"],
+                "end_date": course["end_date"],
                 "classroom":
                     course["classroom"],
                 "group_name":
@@ -2140,15 +2062,14 @@ async def view_schedule(
                 "assignment_source":
                     assignment_source,
                 "school_background":
-                    school_color["background"],
+                    course["background_color"],
                 "school_border":
-                    school_color["border"],
+                    course["border_color"],
                 "is_holiday":
                     is_holiday,
                 "calendar_events":
                     events,
             }
-
 
             day_courses.append(
                 course_data
@@ -2161,8 +2082,8 @@ async def view_schedule(
 
         day_courses.sort(
             key=lambda c: (
-                c["start_time_display"],
                 c["school_name"],
+                c["start_time_display"],
                 c["course_name"]
             )
         )
@@ -2221,6 +2142,20 @@ async def create_course(request: Request):
         form.get("end_time", "")
     ).strip()
 
+    start_date = str(
+        form.get("start_date", "")
+    ).strip()
+
+    end_date = str(
+        form.get("end_date", "")
+    ).strip()
+
+    if not start_date:
+        start_date = None
+
+    if not end_date:
+        end_date = None
+
     classroom = str(
         form.get("classroom", "")
     ).strip()
@@ -2267,10 +2202,10 @@ async def create_course(request: Request):
             "message": "Invalid day."
         }
 
-    if day_of_week < 1 or day_of_week > 5:
+    if day_of_week < 1 or day_of_week > 6:
         return {
             "success": False,
-            "message": "Day must be Monday to Friday."
+            "message": "Day must be Monday to Saturday."
         }
 
     # -----------------------------------------------------
@@ -2287,6 +2222,20 @@ async def create_course(request: Request):
         return {
             "success": False,
             "message": "End time must be after start time."
+        }
+
+    # -----------------------------------------------------
+    # Validate date
+    # -----------------------------------------------------
+
+    if (
+        start_date
+        and end_date
+        and end_date < start_date
+    ):
+        return {
+            "success": False,
+            "message": "End date must be after start date."
         }
 
     # -----------------------------------------------------
@@ -2355,12 +2304,16 @@ async def create_course(request: Request):
             day_of_week,
             start_time,
             end_time,
+            start_date,
+            end_date,
             classroom,
             group_name,
             student_number
         )
         VALUES
         (
+            %s,
+            %s,
             %s,
             %s,
             %s,
@@ -2377,6 +2330,8 @@ async def create_course(request: Request):
             day_of_week,
             start_time,
             end_time,
+            start_date,
+            end_date,
             classroom,
             group_name,
             student_number
@@ -2399,7 +2354,6 @@ async def create_course(request: Request):
 # =========================================================
 # Create School
 # =========================================================
-
 @app.post("/create-school")
 async def create_school(request: Request):
 
@@ -2417,6 +2371,10 @@ async def create_school(request: Request):
 
     db = get_db()
     cursor = db.cursor(dictionary=True)
+
+    # -------------------------------------------------
+    # Check if school already exists
+    # -------------------------------------------------
 
     cursor.execute(
         """
@@ -2439,14 +2397,93 @@ async def create_school(request: Request):
             "message": "This school already exists."
         }
 
+
+    # -------------------------------------------------
+    # Get existing school colors
+    # -------------------------------------------------
+
+    cursor.execute(
+        """
+        SELECT
+            background_color,
+            border_color
+        FROM schools
+        """
+    )
+
+    used_colors = cursor.fetchall()
+
+    used_color_pairs = {
+        (
+            row["background_color"],
+            row["border_color"]
+        )
+        for row in used_colors
+    }
+
+
+    # -------------------------------------------------
+    # Select a color
+    #
+    # First use an unused color.
+    # If all colors are already used,
+    # reuse colors in a rotating order.
+    # -------------------------------------------------
+
+    selected_color = None
+
+    # Try to find an unused color first
+    for color in SCHOOL_COLOR_PALETTE:
+
+        color_pair = (
+            color["background"],
+            color["border"]
+        )
+
+        if color_pair not in used_color_pairs:
+
+            selected_color = color
+            break
+
+
+    # If all colors are already used,
+    # reuse the palette cyclically.
+    if selected_color is None:
+
+        color_index = (
+            len(used_colors)
+            % len(SCHOOL_COLOR_PALETTE)
+        )
+
+        selected_color = SCHOOL_COLOR_PALETTE[
+            color_index
+        ]
+
+
+    # -------------------------------------------------
+    # Create school
+    # -------------------------------------------------
+
     cursor.execute(
         """
         INSERT INTO schools
-            (name)
+            (
+                name,
+                background_color,
+                border_color
+            )
         VALUES
-            (%s)
+            (
+                %s,
+                %s,
+                %s
+            )
         """,
-        (school_name,)
+        (
+            school_name,
+            selected_color["background"],
+            selected_color["border"]
+        )
     )
 
     school_id = cursor.lastrowid
@@ -2462,6 +2499,70 @@ async def create_school(request: Request):
         "school_id": school_id,
         "school_name": school_name
     }
+
+
+# @app.post("/create-school")
+# async def create_school(request: Request):
+
+#     form = await request.form()
+
+#     school_name = str(
+#         form.get("school_name", "")
+#     ).strip()
+
+#     if not school_name:
+#         return {
+#             "success": False,
+#             "message": "School name cannot be empty."
+#         }
+
+#     db = get_db()
+#     cursor = db.cursor(dictionary=True)
+
+#     cursor.execute(
+#         """
+#         SELECT id
+#         FROM schools
+#         WHERE name = %s
+#         """,
+#         (school_name,)
+#     )
+
+#     existing_school = cursor.fetchone()
+
+#     if existing_school is not None:
+
+#         cursor.close()
+#         db.close()
+
+#         return {
+#             "success": False,
+#             "message": "This school already exists."
+#         }
+
+#     cursor.execute(
+#         """
+#         INSERT INTO schools
+#             (name)
+#         VALUES
+#             (%s)
+#         """,
+#         (school_name,)
+#     )
+
+#     school_id = cursor.lastrowid
+
+#     db.commit()
+
+#     cursor.close()
+#     db.close()
+
+#     return {
+#         "success": True,
+#         "message": "School added successfully.",
+#         "school_id": school_id,
+#         "school_name": school_name
+#     }
 
 @app.post("/update-course")
 async def update_course(request: Request):
@@ -2496,6 +2597,10 @@ async def update_course(request: Request):
         form.get("end_time", "")
     ).strip()
 
+    start_date = str(form.get("start_date", "")).strip()
+    
+    end_date = str(form.get("end_date", "")).strip()
+
     classroom = str(
         form.get("classroom", "")
     ).strip()
@@ -2524,6 +2629,11 @@ async def update_course(request: Request):
             "message": "Start time and end time are required"
         }
 
+    if not start_date:
+        start_date = None
+
+    if not end_date:
+        end_date = None
 
     try:
 
@@ -2554,6 +2664,16 @@ async def update_course(request: Request):
             "message": "End time must be after start time"
         }
 
+    if (
+        start_date
+        and end_date
+        and end_date < start_date
+    ):
+
+        return {
+            "success": False,
+            "message": "End date must be after start date"
+        }
 
     db = get_db()
     cursor = db.cursor()
@@ -2595,7 +2715,9 @@ async def update_course(request: Request):
             end_time = %s,
             classroom = %s,
             group_name = %s,
-            student_number = %s
+            student_number = %s,
+            start_date = %s,
+            end_date = %s
         WHERE id = %s
         """,
         (
@@ -2605,6 +2727,8 @@ async def update_course(request: Request):
             classroom,
             group_name,
             student_number,
+            start_date,
+            end_date,
             course_id
         )
     )
@@ -3070,10 +3194,10 @@ async def update_teacher_workdays(request: Request):
         workdays = []
 
     # Only Monday-Friday
-    if any(day < 1 or day > 5 for day in workdays):
+    if any(day < 1 or day > 6 for day in workdays):
         return {
             "success": False,
-            "message": "Workdays must be between 1 and 5."
+            "message": "Workdays must be between 1 and 6."
         }
 
     # Remove duplicates and sort

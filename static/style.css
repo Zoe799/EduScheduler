@@ -174,7 +174,7 @@ body {
     display: grid;
 
     grid-template-columns:
-        repeat(5, minmax(250px, 1fr));
+        repeat(6, minmax(250px, 1fr));
 
     gap: 10px;
 
@@ -2759,4 +2759,18 @@ body {
 .free-teachers-empty {
     color: #94A3B8;
     font-style: italic;
-}s
+}
+
+.add-course-date-row,
+.add-course-time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.course-edit-date-row,
+.course-edit-time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}

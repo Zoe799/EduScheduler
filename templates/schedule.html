@@ -125,6 +125,8 @@
                 <option value="3">Wednesday</option>
                 <option value="4">Thursday</option>
                 <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+                <option value="7">Sunday</option>
             </select>
         </div>
 
@@ -132,7 +134,7 @@
         <div class="add-course-time-row">
 
             <div class="add-course-field">
-                <label>Start</label>
+                <label>Start Time</label>
 
                 <input
                     type="time"
@@ -141,11 +143,33 @@
             </div>
 
             <div class="add-course-field">
-                <label>End</label>
+                <label>End Time</label>
 
                 <input
                     type="time"
                     id="add-end-time"
+                >
+            </div>
+
+        </div>
+
+        <div class="add-course-date-row">
+
+            <div class="add-course-field">
+                <label>Start Date</label>
+
+                <input
+                    type="date"
+                    id="add-start-date"
+                >
+            </div>
+
+            <div class="add-course-field">
+                <label>End Date</label>
+
+                <input
+                    type="date"
+                    id="add-end-date"
                 >
             </div>
 
@@ -654,7 +678,7 @@
                                             <div class="course-edit-field">
 
                                                 <label>
-                                                    Start
+                                                    Start Time
                                                 </label>
 
                                                 <input
@@ -669,13 +693,46 @@
                                             <div class="course-edit-field">
 
                                                 <label>
-                                                    End
+                                                    End Time
                                                 </label>
 
                                                 <input
                                                     type="time"
                                                     class="edit-end-time"
                                                     value="{{ course.end_time_display }}"
+                                                >
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="course-edit-date-row">
+
+                                            <div class="course-edit-field">
+
+                                                <label>
+                                                    Start Date
+                                                </label>
+
+                                                <input
+                                                    type="date"
+                                                    class="edit-start-date"
+                                                    value="{{ course.start_date }}"
+                                                >
+
+                                            </div>
+
+
+                                            <div class="course-edit-field">
+
+                                                <label>
+                                                    End Date
+                                                </label>
+
+                                                <input
+                                                    type="date"
+                                                    class="edit-end-date"
+                                                    value="{{ course.end_date }}"
                                                 >
 
                                             </div>
@@ -800,7 +857,7 @@
                                                                 {% endif %}
                                                             >
                                                                 {{ teacher.name }}
-                                                                ({{ teacher.status }})
+
                                                             </option>
 
                                                         {% endfor %}
@@ -1076,7 +1133,6 @@ function addTeacher(button) {
 
                 <option value="{{ teacher.id }}">
                     {{ teacher.name }}
-                    ({{ teacher.status }})
                 </option>
 
             {% endfor %}
@@ -1114,6 +1170,10 @@ async function saveCourse(button) {
     const endTime = card.querySelector(
         ".edit-end-time"
     ).value;
+
+    const startDate = card.querySelector(".edit-start-date").value;
+
+    const endDate = card.querySelector(".edit-end-date").value;
 
     const classroom = card.querySelector(
         ".edit-classroom"
@@ -1155,6 +1215,14 @@ async function saveCourse(button) {
         return;
     }
 
+    if (endDate < startDate) {
+        showCourseMessage(
+            card,
+            "End date must be after start date.",
+            true
+        );
+        return;
+    }
 
     button.disabled = true;
     button.textContent = "Saving...";
@@ -1180,6 +1248,16 @@ async function saveCourse(button) {
     formData.append(
         "end_time",
         endTime
+    );
+
+    formData.append(
+        "start_date",
+        startDate
+    );
+
+    formData.append(
+        "end_date",
+        endDate
     );
 
     formData.append(
@@ -1537,6 +1615,16 @@ async function saveNewCourse() {
             "add-end-time"
         ).value;
 
+    const startDate =
+        document.getElementById(
+            "add-start-date"
+        ).value;
+
+    const endDate =
+        document.getElementById(
+            "add-end-date"
+        ).value;
+
     const classroom =
         document.getElementById(
             "add-classroom"
@@ -1640,6 +1728,16 @@ async function saveNewCourse() {
     formData.append(
         "end_time",
         endTime
+    );
+
+    formData.append(
+        "start_date",
+        startDate
+    );
+
+    formData.append(
+        "end_date",
+        endDate
     );
 
     formData.append(
