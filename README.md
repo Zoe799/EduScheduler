@@ -200,7 +200,7 @@ EduScheduler/
 ### 1. 克隆项目 | Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/EduScheduler.git
+git clone https://github.com/Zoe799/EduScheduler.git
 cd EduScheduler
 ```
 
@@ -213,13 +213,13 @@ python -m venv venv
 Windows:
 
 ```bash
-venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 macOS / Linux:
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 ### 3. 安装依赖 | Install Dependencies
@@ -236,7 +236,7 @@ Create a `.env` file in the project root:
 
 ```env
 DB_HOST=localhost
-DB_PORT=3306
+DB_PORT=8000
 DB_USER=your_username
 DB_PASSWORD=your_password
 DB_NAME=course_scheduler
@@ -290,46 +290,11 @@ Database credentials and other sensitive information should be stored in `.env` 
 
 EduScheduler 目前主要用于课外教育机构的内部课程和教师管理。
 
-项目仍在持续开发中，后续将继续改进移动端界面、排课流程、部署方式以及系统的自动化功能。
+项目仍在持续开发中。
 
 **English**
 
 EduScheduler is currently designed for internal course and teacher management in an after-school education environment.
 
-The project is actively being developed, with future improvements planned for the mobile interface, scheduling workflow, deployment, and automation.
+The project is actively being developed.
 
----
-
-## 🔮 后续计划 | Future Improvements
-
-* 📱 优化移动端界面
-  Improve the mobile interface
-
-* ⚠️ 改进课程冲突的可视化
-  Improve schedule conflict visualization
-
-* 👨‍🏫 更完善的教师可用时间管理
-  Improve teacher availability management
-
-* 🤖 自动排课功能
-  Automated schedule generation
-
-* 💾 自动数据库备份
-  Automated database backups
-
-* 🔐 用户登录与权限管理
-  User authentication and permission management
-
-* 📊 课表导出与数据报告
-  Schedule export and reporting
-
-* 🌐 更完善的服务器部署方案
-  Improved server deployment
-
----
-
-## 🔒 License
-
-This project is currently intended for internal use.
-
-本项目目前主要用于内部使用。
