@@ -1,103 +1,175 @@
 # EduScheduler
 
 **教育课程与教师排课管理系统**
-**An Education Course and Teacher Scheduling Management System**
+**A Scheduling System for Multi-School Education Programs**
+
+> A web-based scheduling system designed for education programs where teachers, courses, and resources are shared across multiple schools.
 
 ---
 
-## 📖 项目简介 | Overview
+## 💡 Why EduScheduler?
+
+### 为什么自己开发，而不是使用现有排课系统？
 
 **中文**
 
-EduScheduler 是一个基于 Web 的课程与教师排课管理系统，主要用于管理课外教育机构中多个学校、课程、教师、教室和学生班级的日常排课工作。
+EduScheduler 并不是为了重新实现一个通用的排课软件，而是为了适应一个比较特殊的实际工作场景。
 
-系统将课程安排、教师分配、学校假期和教师可用时间集中管理，帮助减少人工维护课表的工作，并及时发现教师时间冲突。
+我们的课程安排涉及 **多个学校、多个校区，以及一批需要在不同学校之间流动的教师**。
 
-**English**
+例如，一名教师可能在：
 
-EduScheduler is a web-based course and teacher scheduling management system designed for after-school education programs.
+```text
+14:00–14:30   School A
+14:30–15:30   School B
+```
 
-It centralizes course schedules, teacher assignments, school holidays, and teacher availability in one place, helping reduce manual schedule management and identify teacher scheduling conflicts.
+也可能出现课程时间存在部分重叠的情况：
+
+```text
+14:00–15:00   School A
+14:30–15:30   School B
+```
+
+这种情况下，系统需要发现潜在的时间冲突，但不能简单地认为：
+
+> “一个老师同时出现在两个课程中 = 排课错误。”
+
+实际的排课工作仍然需要由工作人员根据课程地点、移动时间和具体情况进行判断。
+
+因此，EduScheduler 的设计理念是：
+
+> **发现问题，而不是替人做决定。**
+
+系统会对教师时间冲突和请假等情况提供 **warnings**，而不是强制阻止排课。
+
+此外，我们的课程安排还存在一些通用排课软件不一定能够很好适应的需求：
+
+* 同一批教师需要跨多个学校授课
+* 不同学校拥有独立的假期和不上课日期
+* 常规课程安排与某一周实际的教师安排可能不同
+* 教师拥有自己的工作日和请假记录
+* 一门课程可能由多名教师共同负责
+* 排课人员需要在发现异常后保留人工判断和调整的空间
+
+EduScheduler 因此被设计成一个面向实际工作流程的 **multi-school scheduling system**，而不仅仅是一张电子课表。
 
 ---
 
-## ✨ 主要功能 | Features
-
-### 📅 课程安排 | Course Scheduling
-
-**中文**
-
-* 查看每周课程安排
-* 按学校和日期组织课程
-* 按学校分组显示课程
-* 管理课程时间、教室和学生人数
-* 支持每周单独调整教师分配
+### Why build another scheduling system?
 
 **English**
 
-* View weekly course schedules
+EduScheduler was not created to reinvent a generic scheduling application. It was built to fit a specific real-world workflow.
+
+Our teaching schedule involves **multiple schools, multiple locations, and a shared pool of teachers who move between schools**.
+
+For example, a teacher may have:
+
+```text
+14:00–14:30   School A
+14:30–15:30   School B
+```
+
+There may also be situations where course times partially overlap:
+
+```text
+14:00–15:00   School A
+14:30–15:30   School B
+```
+
+In such cases, the system should identify the potential conflict, but it should not automatically assume that the schedule is invalid.
+
+The scheduler may need to consider factors such as travel time, classroom arrangements, and the actual circumstances of the classes.
+
+Therefore, one of the core design principles of EduScheduler is:
+
+> **Identify potential problems without making scheduling decisions for people.**
+
+The system provides **warnings** for teacher scheduling conflicts and leave, rather than simply blocking the assignment.
+
+Other requirements that shaped the system include:
+
+* Teachers may work across multiple schools
+* Each school has its own holidays and non-class days
+* Regular course schedules may differ from actual weekly teacher assignments
+* Teachers have individual working days and leave
+* A course may have multiple teachers
+* Scheduling staff need to retain the ability to review and adjust unusual cases manually
+
+EduScheduler is therefore designed as a **multi-school scheduling system built around a real operational workflow**, rather than simply a digital timetable.
+
+---
+
+## ✨ Key Features | 主要功能
+
+### 📅 Course Scheduling | 课程安排
+
+* Weekly schedule view
 * Organize courses by school and day
-* Group courses by school
-* Manage course times, classrooms, and student numbers
-* Make weekly adjustments to teacher assignments
+* Manage course time, classroom, group, and student number
+* Support multiple teachers per course
+* Make weekly changes without modifying the regular course configuration
 
 ---
 
-### 🏫 学校管理 | School Management
-
-**中文**
-
-* 添加和编辑学校
-* 为不同学校分配颜色
-* 管理学校假期
-* 根据学校假期自动隐藏当天课程
-
-**English**
-
-* Add and edit schools
-* Assign colors to different schools
-* Manage school holidays
-* Automatically hide courses during school holidays
-
----
-
-### 👨‍🏫 教师管理 | Teacher Management
-
-**中文**
-
-* 添加和管理教师
-* 设置教师工作日
-* 记录教师请假
-* 将教师分配到课程
-* 支持每门课程最多 4 名教师
-
-**English**
+### 👨‍🏫 Teacher Management | 教师管理
 
 * Add and manage teachers
-* Set teacher working days
+* Configure teacher working days
 * Record teacher leave
 * Assign teachers to courses
 * Support up to four teachers per course
 
 ---
 
-### 🔄 每周教师分配 | Weekly Teacher Assignments
+### 🔄 Weekly Teacher Assignments | 每周教师分配
+
+EduScheduler separates the **regular course schedule** from the **actual teacher assignment for a specific week**.
+
+```text
+Regular Course
+      │
+      ▼
+Previous Week Assignment
+      │
+      ▼
+Current Week Assignment
+      │
+      └── Override when necessary
+```
+
+This allows a regular course to remain unchanged while teachers can be temporarily reassigned for a particular week.
 
 **中文**
 
-系统将常规课程信息与每周教师安排分开管理。
+系统将长期课程设置和某一周实际的教师安排分开管理。
 
-教师安排可以继承之前一周的设置，同时也可以针对某一周进行临时调整，而不会修改课程本身的长期设置。
+例如：
 
-**English**
+```text
+Regular Course
+Monday 16:00–17:00
+SchoolI Robotics
 
-The system separates regular course information from weekly teacher assignments.
+Week 1 → Teacher A + Teacher B
+Week 2 → Teacher A + Teacher C
+Week 3 → Teacher B + Teacher C
+```
 
-Teacher assignments can be inherited from the previous week while still allowing temporary changes for a specific week without modifying the regular course configuration.
+这样临时调课不会破坏课程本身的长期配置。
 
 ---
 
-### ⚠️ 冲突检测 | Conflict Detection
+### ⚠️ Conflict Detection | 冲突检测
+
+The system checks for potential issues such as:
+
+* Teacher time conflicts
+* Teachers assigned during their leave
+* Teachers scheduled at different schools at overlapping times
+
+Conflicts are displayed as **warnings**, rather than hard restrictions.
 
 **中文**
 
@@ -105,51 +177,104 @@ Teacher assignments can be inherited from the previous week while still allowing
 
 * 教师课程时间冲突
 * 教师请假期间的课程安排
-* 同一教师在不同学校同时授课的情况
+* 教师在不同学校之间的时间重叠
 
-冲突以警告形式显示，不会强制阻止排课操作。
-
-**English**
-
-The system checks for:
-
-* Teacher schedule conflicts
-* Course assignments during teacher leave
-* Teachers assigned to different schools at the same time
-
-Conflicts are displayed as warnings rather than blocking schedule changes.
+系统不会直接禁止操作，而是提醒排课人员进行人工确认。
 
 ---
 
-### 🗓️ 学校日历 | School Calendar
+### 🗓️ School-Specific Calendar | 学校独立日历
+
+Each school has its own calendar.
+
+```text
+School A → Holiday
+School B → Classes
+School C → Holiday
+```
+
+A holiday at one school does not automatically affect other schools.
 
 **中文**
 
-学校日历用于记录不上课的日期，例如学校假期和其他非授课日。
+每个学校拥有独立的不上课日期。
 
-当课程日期落在学校的非授课日期范围内时，该课程不会显示在课表中。
+因此：
 
-**English**
+> School A 放假 ≠ 所有学校都放假
 
-The school calendar records non-class days, including school holidays and other days without classes.
-
-Courses are automatically hidden when their scheduled dates fall within a school's non-class period.
+课程只有在对应学校的非授课日期内才会被隐藏。
 
 ---
 
-### 📱 响应式界面 | Responsive Interface
+### 🏫 School Management | 学校管理
+
+* Add and edit schools
+* Assign visual colors to schools
+* Manage school-specific holidays
+* Group courses by school
+
+---
+
+### 📱 Schedule View | 课表查看
+
+The system provides a simplified read-only schedule view for teachers and staff.
+
+The goal is to make the information needed during daily operations easy to find without exposing unnecessary editing controls.
+
+---
+
+## 🧩 Design Philosophy | 设计理念
+
+### Human-in-the-loop Scheduling
 
 **中文**
 
-系统支持桌面和移动端浏览器访问，并针对教师查看课表的使用场景进行了简化设计。
+EduScheduler 并不试图完全自动化排课。
+
+复杂的教育排课工作往往包含一些软件无法直接判断的现实因素，例如：
+
+* 教师在不同学校之间移动
+* 临时人员调整
+* 特殊课程安排
+* 教室和学生数量
+* 某些看似冲突、但实际上经过人工确认是可行的安排
+
+因此，系统负责：
+
+**Detect → Warn → Visualize**
+
+而最终的：
+
+**Review → Decide → Adjust**
+
+仍然交给排课人员。
 
 **English**
 
-The system supports both desktop and mobile browsers, with a simplified interface for teachers to quickly view their schedules.
+EduScheduler does not attempt to completely automate the scheduling process.
+
+Real-world education scheduling can involve factors that are difficult for software to determine automatically, such as:
+
+* Teacher movement between schools
+* Temporary staff changes
+* Special course arrangements
+* Classroom and student capacity
+* Apparent conflicts that have been manually verified as workable
+
+The system focuses on:
+
+**Detect → Warn → Visualize**
+
+while leaving:
+
+**Review → Decide → Adjust**
+
+to the scheduling staff.
 
 ---
 
-## 🛠️ 技术栈 | Tech Stack
+## 🛠️ Tech Stack | 技术栈
 
 ### Backend
 
@@ -164,13 +289,15 @@ The system supports both desktop and mobile browsers, with a simplified interfac
 * JavaScript
 * Jinja2 Templates
 
-### Database
+### Development
 
-* MySQL
+* Git / GitHub
+* REST-style API endpoints
+* Environment-based database configuration
 
 ---
 
-## 📁 项目结构 | Project Structure
+## 📁 Project Structure | 项目结构
 
 ```text
 EduScheduler/
@@ -195,19 +322,19 @@ EduScheduler/
 
 ---
 
-## 🚀 安装与运行 | Getting Started
+## 🚀 Getting Started | 安装与运行
 
-### 1. 克隆项目 | Clone the Repository
+### 1. Clone the repository | 克隆项目
 
 ```bash
 git clone https://github.com/Zoe799/EduScheduler.git
 cd EduScheduler
 ```
 
-### 2. 创建虚拟环境 | Create a Virtual Environment
+### 2. Create a virtual environment | 创建虚拟环境
 
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 Windows:
@@ -222,15 +349,13 @@ macOS / Linux:
 source .venv/bin/activate
 ```
 
-### 3. 安装依赖 | Install Dependencies
+### 3. Install dependencies | 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. 配置数据库 | Configure the Database
-
-在项目根目录创建 `.env` 文件：
+### 4. Configure the database | 配置数据库
 
 Create a `.env` file in the project root:
 
@@ -242,19 +367,15 @@ DB_PASSWORD=your_password
 DB_NAME=course_scheduler
 ```
 
-然后创建 MySQL 数据库并导入项目所需的数据表。
+数据库账号和密码等敏感信息应保存在 `.env` 中，不应提交到 GitHub。
 
-Create the MySQL database and import the required database tables.
-
-### 5. 启动项目 | Start the Application
+### 5. Start the application | 启动项目
 
 ```bash
 uvicorn main:app --reload
 ```
 
-默认访问地址：
-
-Default URL:
+The application will normally be available at:
 
 ```text
 http://127.0.0.1:8000
@@ -262,39 +383,68 @@ http://127.0.0.1:8000
 
 ---
 
-## 🗄️ 数据库 | Database
+## 🗄️ Database | 数据库
 
-EduScheduler 使用 MySQL 保存以下数据：
+EduScheduler uses MySQL to manage:
 
-EduScheduler uses MySQL to store:
+* Schools
+* Courses
+* Teachers
+* Teacher work days
+* Teacher leave
+* Weekly teacher assignments
+* School calendars
 
-* 学校 | Schools
-* 课程 | Courses
-* 教师 | Teachers
-* 教师工作日 | Teacher Work Days
-* 教师请假 | Teacher Leave
-* 每周教师分配 | Weekly Teacher Assignments
-* 学校假期 | School Holidays
-
-**注意 | Note**
-
-数据库账号、密码等敏感信息应保存在 `.env` 中，不应提交到 GitHub。
-
-Database credentials and other sensitive information should be stored in `.env` and should **not** be committed to GitHub.
+The database structure is designed around the relationship between **schools, courses, teachers, and weekly assignments**.
 
 ---
 
-## 📌 当前状态 | Current Status
+## 📌 Current Status | 当前状态
 
 **中文**
 
-EduScheduler 目前主要用于课外教育机构的内部课程和教师管理。
+EduScheduler 目前主要用于课外教育机构内部的课程和教师排课管理。
 
-项目仍在持续开发中。
+项目正在持续开发中。目前重点已经从基础排课功能逐渐转向代码结构、用户体验、移动端界面以及部署和备份。
 
 **English**
 
-EduScheduler is currently designed for internal course and teacher management in an after-school education environment.
+EduScheduler is currently designed for internal scheduling and teacher management in an after-school education environment.
 
-The project is actively being developed.
+The project is actively being developed, with ongoing work focused on code organization, user experience, mobile interface improvements, deployment, and database backup.
 
+---
+
+## 🔮 Future Improvements | 后续计划
+
+* 📱 Improve the mobile interface
+  优化移动端界面
+
+* 🤖 Explore automated schedule generation
+  探索自动排课
+
+* ⚠️ Improve conflict visualization
+  改进冲突可视化
+
+* 👨‍🏫 Improve teacher availability management
+  完善教师可用时间管理
+
+* 💾 Automated database backup
+  自动数据库备份
+
+* 🔐 User authentication and permissions
+  用户登录与权限管理
+
+* 📊 Schedule export and reporting
+  课表导出与数据报告
+
+* 🌐 Improve deployment and hosting
+  改进部署与服务器方案
+
+---
+
+## 🔒 License
+
+This project is currently intended for internal use.
+
+本项目目前主要用于内部使用。
